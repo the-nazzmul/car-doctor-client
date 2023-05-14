@@ -1,11 +1,14 @@
 import { useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../Providers/AuthProvider";
 
 
 const Login = () => {
 
     const { login } = useContext(AuthContext)
+    const location = useLocation();
+    const from = location.state?.from?.pathname || '/';
+    const navigate = useNavigate()
 
     const handleLogin = event => {
         event.preventDefault()
@@ -18,7 +21,27 @@ const Login = () => {
         console.log(user);
 
         login(email, password)
-            .then(res => console.log(res.user))
+            .then(res => {
+                console.log(res.user)
+                const userEmail = {
+                    email: res.user.email
+                }
+                console.log(userEmail);
+               
+                fetch(`http://localhost:4000/jwt`,{
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify(userEmail)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('jwt response',data);
+                    localStorage.setItem('car-doc-token', data.token)
+                    navigate(from, {replace:true})
+                })
+            })
             .catch(err => console.log(err.message))
     }
 
